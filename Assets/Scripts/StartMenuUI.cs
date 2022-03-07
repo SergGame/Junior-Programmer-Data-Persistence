@@ -17,7 +17,7 @@ public class StartMenuUI : MonoBehaviour
         }
         else
         {
-            PlayerManager.Instance.PlayerName = _layerName.text;
+            PlayerManager.Instance.CurrentName = _layerName.text;
             SceneManager.LoadScene("Main");
         }
     }
