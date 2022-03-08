@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -8,9 +7,11 @@ public class PlayerManager : MonoBehaviour
     public static PlayerManager Instance;
     public string CurrentName { get; set; }
     public PlayerData PlayerData { get; private set; } = new PlayerData();
+    public Leaderboard Leaderboard { get; private set; } = new Leaderboard();
+
+    public int MaxCount { get; } = 5;
 
     private string _path;
-
 
     private void Awake()
     {
@@ -26,7 +27,7 @@ public class PlayerManager : MonoBehaviour
 
     private void Start()
     {
-        _path = Application.persistentDataPath + "/player.json";
+        _path = Application.persistentDataPath + "/table.json";
         LoadPlayerData();
     }
     private void LoadPlayerData()
@@ -34,21 +35,58 @@ public class PlayerManager : MonoBehaviour
         if (File.Exists(_path))
         {
             string json = File.ReadAllText(_path);
-            PlayerData = JsonUtility.FromJson<PlayerData>(json);
+
+            Leaderboard = JsonUtility.FromJson<Leaderboard>(json);
+            PlayerData = Leaderboard.PlayerDatas[0];
         }
+        else
+            Leaderboard.PlayerDatas.Add(new PlayerData());
+
     }
 
     public void SaveScore(int value)
     {
-        if(value > PlayerData.Score)
+        if (Leaderboard.PlayerDatas.Count > 0)
         {
-            PlayerData.Score = value;
-            PlayerData.Name = CurrentName;
 
-            string json = JsonUtility.ToJson(PlayerData);
+            if (Leaderboard.PlayerDatas.Count < MaxCount)
+            {
+                int count = MaxCount - Leaderboard.PlayerDatas.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    Leaderboard.PlayerDatas.Add(new PlayerData());
+                }
+            }
 
-            File.WriteAllText(_path, json);
+            Leaderboard.PlayerDatas[MaxCount - 1].Score = value;
+            Leaderboard.PlayerDatas[MaxCount - 1].Name = CurrentName;
+
+            // sorted table
+
+            for (int i = Leaderboard.PlayerDatas.Count - 1; i > 0; i--)
+            {
+                if (Leaderboard.PlayerDatas[i].Score < Leaderboard.PlayerDatas[i - 1].Score)
+                    break;
+
+                PlayerData temp = Leaderboard.PlayerDatas[i - 1];
+                Leaderboard.PlayerDatas[i - 1] = Leaderboard.PlayerDatas[i];
+                Leaderboard.PlayerDatas[i] = temp;
+            }
         }
+        else
+        {
+            PlayerData playerData = new PlayerData
+            {
+                Name = CurrentName,
+                Score = value
+            };
+
+            Leaderboard.PlayerDatas.Add(playerData);
+        }
+
+
+        string json = JsonUtility.ToJson(Leaderboard);
+        File.WriteAllText(_path, json);
     }
 
 }
@@ -58,4 +96,10 @@ public class PlayerData
 {
     public string Name;
     public int Score;
+}
+
+[System.Serializable]
+public class Leaderboard
+{
+    public List<PlayerData> PlayerDatas = new List<PlayerData>();
 }

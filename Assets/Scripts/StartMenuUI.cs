@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -27,9 +25,9 @@ public class StartMenuUI : MonoBehaviour
         _inputField.image.color = Color.white;
     }
 
-    public void HighScore()
+    public void Leaderboard()
     {
-        SceneManager.LoadScene("High score");
+        SceneManager.LoadScene("Leaderboard");
     }
 
     public void ExitGame()
